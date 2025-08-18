@@ -18,6 +18,20 @@ namespace SemaforoAccidentes2
 
         }
 
+
+        private FormMain mainForm;
+
+        public FormRegistro(FormMain main)
+        {
+            InitializeComponent();
+            mainForm = main;
+            btnGuardar.Click += BtnGuardar_Click;
+            lblHsm.Enabled = false;
+            txthsm.Enabled = false;
+        }
+
+
+
         private void FormRegistro_Load(object sender, EventArgs e)
         {
             cmbTipo.Items.Clear();
@@ -75,7 +89,12 @@ namespace SemaforoAccidentes2
                 }
 
                 MessageBox.Show("Registro guardado correctamente.");
+
+                // Mostrar el semáforo sobre otras ventanas
+                mainForm.MostrarAlertaSemaforo();
+
                 this.Close();
+
             }
             catch (Exception ex)
             {

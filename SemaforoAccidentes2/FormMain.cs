@@ -235,7 +235,7 @@ namespace SemaforoAccidentes2
         }
 
 
-        private void FormMain_Load(object sender, EventArgs e)
+        private void FormMain_Load(object sender, EventArgs e) //usuario registrar AlanSH
         {
             HacerPanelRedondo(luzRoja);
             HacerPanelRedondo(luzAmarilla);
@@ -287,7 +287,6 @@ namespace SemaforoAccidentes2
             // Actualiza semáforo visual
             ActualizarColorSemaforo();
         }
-
 
 
         private void luzRoja_Paint(object sender, PaintEventArgs e)
@@ -373,12 +372,29 @@ namespace SemaforoAccidentes2
 
         private void btnRegistrar_Click(object sender, EventArgs e)
         {
-            using (FormRegistro formRegistro = new FormRegistro())
-            {
-                formRegistro.ShowDialog();
-            }
-            // Después de cerrar el registro, actualiza datos para refrescar semáforo
+            FormRegistro formRegistro = new FormRegistro(this); // pasamos referencia
+            formRegistro.ShowDialog();
+
+            // Después de cerrar el registro, actualiza semáforo
             ActualizarDatos();
+        }
+
+
+        public void MostrarAlertaSemaforo()
+        {
+            this.TopMost = true;
+            this.BringToFront();
+
+            // Opcional: volver a normal después de 5 segundos
+            var t = new System.Windows.Forms.Timer();
+            t.Interval = 5000; // 5 segundos
+            t.Tick += (s, e) =>
+            {
+                this.TopMost = false;
+                t.Stop();
+                t.Dispose();
+            };
+            t.Start();
         }
 
 
