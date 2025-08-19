@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Drawing.Drawing2D; // para GraphicsPath
 using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
 
 
 
@@ -260,6 +261,8 @@ namespace SemaforoAccidentes2
                 btnRegistrar.Visible = false;
             }
 
+            SuscribirseNotificaciones();
+
         }
 
 
@@ -278,6 +281,48 @@ namespace SemaforoAccidentes2
                 t.Dispose();
             };
             t.Start();
+        }
+
+
+        private void SuscribirseNotificaciones()
+        {
+            SqlDependency.Stop(connectionString);
+            SqlDependency.Start(connectionString);
+
+            ConsultarRegistros();
+        }
+
+        private void ConsultarRegistros()
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string query = "SELECT fecha, tipo FROM dbo.Registros"; // la tabla que quieres monitorear
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+
+                // Asociamos la dependencia
+                SqlDependency dependency = new SqlDependency(cmd);
+                dependency.OnChange += Dependency_OnChange;
+
+                conn.Open();
+                cmd.ExecuteReader().Dispose(); // ejecutar la query para enganchar la notificación
+            }
+        }
+
+        private void Dependency_OnChange(object sender, SqlNotificationEventArgs e)
+        {
+            if (e.Type == SqlNotificationType.Change)
+            {
+                this.BeginInvoke((MethodInvoker)(() =>
+                {
+                    // Sobresale el semáforo y refresca
+                    MostrarAlertaSemaforo();
+                    ActualizarDatos();
+                }));
+
+                // Es necesario volver a suscribirse (las notificaciones son de un solo uso)
+                ConsultarRegistros();
+            }
         }
 
 

@@ -90,10 +90,13 @@ namespace SemaforoAccidentes2
 
                 MessageBox.Show("Registro guardado correctamente.");
 
-                // Mostrar el semáforo sobre otras ventanas
-                mainForm.MostrarAlertaSemaforo();
-
                 this.Close();
+
+                // Después de cerrarse, programa la alerta en el Main
+                mainForm.BeginInvoke((MethodInvoker)(() =>
+                {
+                    mainForm.MostrarAlertaSemaforo();
+                }));
 
             }
             catch (Exception ex)
