@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
 using Microsoft.Data.SqlClient;
+using ClosedXML.Excel;
+using System.IO;
 
 
 namespace SemaforoAccidentes2
@@ -13,6 +15,7 @@ namespace SemaforoAccidentes2
         {
             InitializeComponent();
             btnGuardar.Click += BtnGuardar_Click;
+            btnExportar.Click += btnExportar_Click; 
             lblHsm.Enabled = false; // Deshabilitar etiqueta HSM
             txthsm.Enabled = false; // Deshabilitar campo de texto HSM
 
@@ -26,6 +29,7 @@ namespace SemaforoAccidentes2
             InitializeComponent();
             mainForm = main;
             btnGuardar.Click += BtnGuardar_Click;
+            btnExportar.Click += btnExportar_Click;
             lblHsm.Enabled = false;
             txthsm.Enabled = false;
         }
@@ -106,6 +110,61 @@ namespace SemaforoAccidentes2
         }
 
 
+        private void btnExportar_Click(object sender, EventArgs e)
+        {
+            using (SaveFileDialog sfd = new SaveFileDialog()
+            {
+                Filter = "Excel Workbook|*.xlsx",
+                Title = "Guardar archivo Excel"
+            })
+            {
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        int hsm = 0;
+
+                        // Obtener el último HSM
+                        string queryHSM = "SELECT TOP 1 HSM FROM TableHSM ORDER BY id DESC";
+                        using (SqlConnection conn = new SqlConnection(connectionString))
+                        using (SqlCommand cmd = new SqlCommand(queryHSM, conn))
+                        {
+                            conn.Open();
+                            var result = cmd.ExecuteScalar();
+                            if (result != null && result != DBNull.Value)
+                                hsm = Convert.ToInt32(result);
+                        }
+
+                        using (var workbook = new XLWorkbook())
+                        {
+                            var worksheet = workbook.Worksheets.Add("Registro");
+
+                            // Encabezados
+                            worksheet.Cell(1, 1).Value = "Fecha";
+                            worksheet.Cell(1, 2).Value = "Tipo";
+                            worksheet.Cell(1, 3).Value = "Descripción";
+                            worksheet.Cell(1, 4).Value = "HSM";
+
+                            // Valores del formulario
+                            worksheet.Cell(2, 1).Value = dtpFecha.Value.ToString("dd/MM/yyyy");
+                            worksheet.Cell(2, 2).Value = cmbTipo.SelectedItem?.ToString() ?? "";
+                            worksheet.Cell(2, 3).Value = txtDescripcion.Text.Trim();
+                            worksheet.Cell(2, 4).Value = hsm;
+
+                            worksheet.Columns().AdjustToContents();
+                            workbook.SaveAs(sfd.FileName);
+                        }
+
+                        MessageBox.Show("Exportación completada con éxito.", "Exportar", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error al exportar: " + ex.Message, "Exportar", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
         private void chkHsm_CheckedChanged(object sender, EventArgs e)
         {
             if (chkHsm.Checked)
@@ -133,6 +192,11 @@ namespace SemaforoAccidentes2
         }
 
         private void btnGuardar_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
         {
 
         }

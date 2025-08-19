@@ -39,6 +39,7 @@
             lblHsm = new Label();
             txthsm = new TextBox();
             chkHsm = new CheckBox();
+            btnExportar = new Button();
             SuspendLayout();
             // 
             // lblFecha
@@ -135,12 +136,23 @@
             chkHsm.UseVisualStyleBackColor = true;
             chkHsm.CheckedChanged += chkHsm_CheckedChanged;
             // 
+            // btnExportar
+            // 
+            btnExportar.Location = new Point(539, 293);
+            btnExportar.Name = "btnExportar";
+            btnExportar.Size = new Size(112, 34);
+            btnExportar.TabIndex = 10;
+            btnExportar.Text = "Exportar";
+            btnExportar.UseVisualStyleBackColor = true;
+            btnExportar.Click += button1_Click;
+            // 
             // FormRegistro
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ControlLightLight;
             ClientSize = new Size(664, 344);
+            Controls.Add(btnExportar);
             Controls.Add(chkHsm);
             Controls.Add(txthsm);
             Controls.Add(lblHsm);
@@ -173,5 +185,6 @@
         private System.Windows.Forms.Label lblHsm;
         private System.Windows.Forms.TextBox txthsm;
         private System.Windows.Forms.CheckBox chkHsm;
+        private Button btnExportar;
     }
 }
