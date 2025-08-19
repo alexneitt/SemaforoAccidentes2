@@ -249,8 +249,8 @@ namespace SemaforoAccidentes2
             ActualizarDatos();
 
             // Permitir btnRegistrar solo para un usuario específico
-            string usuarioPermitido = "compu1";
-            if (Environment.UserName.Equals(usuarioPermitido, StringComparison.OrdinalIgnoreCase))
+            string[] usuariosPermitidos = { "compu1", "AlanSH" };
+            if (usuariosPermitidos.Contains(Environment.UserName, StringComparer.OrdinalIgnoreCase))
             {
                 btnRegistrar.Enabled = true;
                 btnRegistrar.Visible = true;

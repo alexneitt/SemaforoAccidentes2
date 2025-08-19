@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             pnlSemaforo = new Panel();
             luzVerde = new Panel();
             luzAmarilla = new Panel();
@@ -179,7 +180,7 @@
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Desktop;
-            ClientSize = new Size(328, 438);
+            ClientSize = new Size(315, 438);
             Controls.Add(lblHsm);
             Controls.Add(lblFecha2);
             Controls.Add(lblIncidentes);
@@ -191,6 +192,7 @@
             Controls.Add(luzRoja);
             Controls.Add(pnlSemaforo);
             FormBorderStyle = FormBorderStyle.None;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(3, 4, 3, 4);
             Name = "FormMain";
             StartPosition = FormStartPosition.Manual;

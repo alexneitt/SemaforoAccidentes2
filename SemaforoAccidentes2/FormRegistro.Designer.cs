@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormRegistro));
             lblFecha = new Label();
             dtpFecha = new DateTimePicker();
             lblDescripcion = new Label();
@@ -150,6 +151,7 @@
             Controls.Add(lblDescripcion);
             Controls.Add(dtpFecha);
             Controls.Add(lblFecha);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(3, 4, 3, 4);
             Name = "FormRegistro";
             Text = "Registrar Accidente";
