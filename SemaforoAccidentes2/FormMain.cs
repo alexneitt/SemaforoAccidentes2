@@ -3,9 +3,11 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Drawing.Drawing2D; // para GraphicsPath
-using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient; 
 using System.Data.SqlClient;
 
+
+//borrar este mensaje
 
 
 
@@ -24,6 +26,7 @@ namespace SemaforoAccidentes2
         private int hsm = 0; // Ejemplo inicial
         // Reemplaza System.Timers.Timer por System.Windows.Forms.Timer para usar el evento Tick correctamente
         private System.Windows.Forms.Timer timer;
+
 
         // Constantes para mensajes de Windows
         public const int WM_NCLBUTTONDOWN = 0xA1;
@@ -44,7 +47,7 @@ namespace SemaforoAccidentes2
             this.MouseDown += FormMain_MouseDown;
             this.LocationChanged += FormMain_LocationChanged;
 
-            // Timer para refrescar cada minuto 
+            // Timer para refrescar cada segundo
             timer = new System.Windows.Forms.Timer();
             timer.Interval = 1000;
             timer.Tick += (s, e) => ActualizarDatos();
