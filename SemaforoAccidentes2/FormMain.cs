@@ -27,6 +27,8 @@ namespace SemaforoAccidentes2
         // Reemplaza System.Timers.Timer por System.Windows.Forms.Timer para usar el evento Tick correctamente
         private System.Windows.Forms.Timer timer;
 
+        private readonly TimeSpan horaReinicio = new TimeSpan(12, 0, 0); // 12:00 AM
+
 
         // Constantes para mensajes de Windows
         public const int WM_NCLBUTTONDOWN = 0xA1;
@@ -52,7 +54,44 @@ namespace SemaforoAccidentes2
             timer.Interval = 1000;
             timer.Tick += (s, e) => ActualizarDatos();
             timer.Start();
+
+            // Timer para verificar reinicio forzoso
+            System.Windows.Forms.Timer reinicioTimer = new System.Windows.Forms.Timer();
+            reinicioTimer.Interval = 60000; // cada 60 segundos
+            reinicioTimer.Tick += ReinicioTimer_Tick;
+            reinicioTimer.Start();
+
         }
+
+
+        private void ReinicioTimer_Tick(object sender, EventArgs e)
+        {
+            // Comparar solo horas y minutos
+            if (DateTime.Now.Hour == horaReinicio.Hours &&
+                DateTime.Now.Minute == horaReinicio.Minutes)
+            {
+                ReiniciarAplicacion();
+            }
+        }
+
+        private void ReiniciarAplicacion()
+        {
+            try
+            {
+                string exePath = Application.ExecutablePath;
+
+                // Lanzar nueva instancia
+                System.Diagnostics.Process.Start(exePath);
+
+                // Cerrar instancia actual
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al reiniciar: " + ex.Message);
+            }
+        }
+
 
 
         protected override void OnFormClosing(FormClosingEventArgs e)
