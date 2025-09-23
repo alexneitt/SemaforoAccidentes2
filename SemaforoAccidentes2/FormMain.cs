@@ -51,7 +51,88 @@ namespace SemaforoAccidentes2
             timer = new System.Windows.Forms.Timer();
             timer.Interval = 1000;
             timer.Tick += (s, e) => ActualizarDatos();
-            timer.Start();
+            timer.Start();         
+
+        }
+
+        private string machineName;
+        private string primaryIp;
+        private string[] allIps;
+
+        private string GetPrimaryIPv4()
+        {
+            try
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip))
+                    {
+                        // Excluir direcciones 169.254.x.x (APIPA) si quieres:
+                        string s = ip.ToString();
+                        if (!s.StartsWith("169.254")) return s;
+                    }
+                }
+            }
+            catch
+            {
+                // si hay fallo, fallback a loopback para evitar null
+            }
+            return "127.0.0.1";
+        }
+
+        private string[] GetAllIPv4()
+        {
+            try
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                var list = new List<string>();
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip))
+                    {
+                        string s = ip.ToString();
+                        if (!s.StartsWith("169.254")) list.Add(s);
+                    }
+                }
+                if (list.Count == 0) list.Add("127.0.0.1");
+                return list.ToArray();
+            }
+            catch
+            {
+                return new string[] { "127.0.0.1" };
+            }
+        }
+
+        private void SaveHostInfoToDatabase(string machine, string ip)
+        {
+            try
+            {
+                string query = @"
+                IF EXISTS (SELECT 1 FROM Hosts WHERE MachineName = @machine)
+                    UPDATE Hosts
+                    SET IP = @ip, AllIPs = @allips, LastSeen = GETDATE()
+                    WHERE MachineName = @machine;
+                ELSE
+                    INSERT INTO Hosts (MachineName, IP, AllIPs, LastSeen)
+                    VALUES (@machine, @ip, @allips, GETDATE());
+                ";
+
+                using (var conn = new SqlConnection(connectionString))
+                using (var cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@machine", machine ?? Environment.MachineName);
+                    cmd.Parameters.AddWithValue("@ip", ip ?? "0.0.0.0");
+                    cmd.Parameters.AddWithValue("@allips", string.Join(";", allIps ?? new string[] { ip ?? "0.0.0.0" }));
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
 
@@ -266,6 +347,13 @@ namespace SemaforoAccidentes2
                 btnRegistrar.Enabled = false;
                 btnRegistrar.Visible = false;
             }
+
+            // Recopilar nombre e IP(s)
+            machineName = Environment.MachineName;
+            primaryIp = GetPrimaryIPv4();
+            allIps = GetAllIPv4();
+            // Guardar/actualizar en base de datos (opcional)
+            Task.Run(() => SaveHostInfoToDatabase(machineName, primaryIp)); // en background para no bloquear UI
 
             SuscribirseNotificaciones();
 

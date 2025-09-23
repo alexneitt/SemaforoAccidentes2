@@ -35,7 +35,6 @@ namespace SemaforoAccidentes2
         }
 
 
-
         private void FormRegistro_Load(object sender, EventArgs e)
         {
             cmbTipo.Items.Clear();
@@ -122,36 +121,61 @@ namespace SemaforoAccidentes2
                 {
                     try
                     {
-                        int hsm = 0;
-
-                        // Obtener el último HSM
-                        string queryHSM = "SELECT TOP 1 HSM FROM TableHSM ORDER BY id DESC";
-                        using (SqlConnection conn = new SqlConnection(connectionString))
-                        using (SqlCommand cmd = new SqlCommand(queryHSM, conn))
-                        {
-                            conn.Open();
-                            var result = cmd.ExecuteScalar();
-                            if (result != null && result != DBNull.Value)
-                                hsm = Convert.ToInt32(result);
-                        }
-
                         using (var workbook = new XLWorkbook())
                         {
-                            var worksheet = workbook.Worksheets.Add("Registro");
+                            using (SqlConnection conn = new SqlConnection(connectionString))
+                            {
+                                conn.Open();
 
-                            // Encabezados
-                            worksheet.Cell(1, 1).Value = "Fecha";
-                            worksheet.Cell(1, 2).Value = "Tipo";
-                            worksheet.Cell(1, 3).Value = "Descripción";
-                            worksheet.Cell(1, 4).Value = "HSM";
+                                // Exportar Registros
+                                var wsRegistros = workbook.Worksheets.Add("Registros");
 
-                            // Valores del formulario
-                            worksheet.Cell(2, 1).Value = dtpFecha.Value.ToString("dd/MM/yyyy");
-                            worksheet.Cell(2, 2).Value = cmbTipo.SelectedItem?.ToString() ?? "";
-                            worksheet.Cell(2, 3).Value = txtDescripcion.Text.Trim();
-                            worksheet.Cell(2, 4).Value = hsm;
+                                wsRegistros.Cell(1, 1).Value = "ID";
+                                wsRegistros.Cell(1, 2).Value = "Fecha";
+                                wsRegistros.Cell(1, 3).Value = "Tipo";
+                                wsRegistros.Cell(1, 4).Value = "Descripción";
 
-                            worksheet.Columns().AdjustToContents();
+                                string queryRegistros = "SELECT * FROM Registros ORDER BY id DESC";
+                                using (SqlCommand cmd = new SqlCommand(queryRegistros, conn))
+                                using (SqlDataReader reader = cmd.ExecuteReader())
+                                {
+                                    int fila = 2;
+                                    while (reader.Read())
+                                    {
+                                        wsRegistros.Cell(fila, 1).Value = Convert.ToInt32(reader["id"]);
+                                        wsRegistros.Cell(fila, 2).Value = Convert.ToDateTime(reader["fecha"]).ToString("dd/MM/yyyy");
+                                        wsRegistros.Cell(fila, 3).Value = reader["tipo"]?.ToString() ?? "";
+                                        wsRegistros.Cell(fila, 4).Value = reader["descripcion"]?.ToString() ?? "";
+                                        fila++;
+                                    }
+                                }
+
+                                wsRegistros.Columns().AdjustToContents();
+
+                                // Exportar TableHSM
+                                var wsHSM = workbook.Worksheets.Add("TableHSM");
+
+                                wsHSM.Cell(1, 1).Value = "ID";
+                                wsHSM.Cell(1, 2).Value = "HSM";
+                                wsHSM.Cell(1, 3).Value = "Fecha";
+
+                                string queryHSM = "SELECT * FROM TableHSM ORDER BY id DESC";
+                                using (SqlCommand cmdHSM = new SqlCommand(queryHSM, conn))
+                                using (SqlDataReader readerHSM = cmdHSM.ExecuteReader())
+                                {
+                                    int fila = 2;
+                                    while (readerHSM.Read())
+                                    {
+                                        wsHSM.Cell(fila, 1).Value = Convert.ToInt32(readerHSM["id"]);
+                                        wsHSM.Cell(fila, 2).Value = Convert.ToInt32(readerHSM["hsm"]);
+                                        wsHSM.Cell(fila, 3).Value = Convert.ToDateTime(readerHSM["fecha"]).ToString("dd/MM/yyyy");
+                                        fila++;
+                                    }
+                                }
+
+                                wsHSM.Columns().AdjustToContents();
+                            }
+
                             workbook.SaveAs(sfd.FileName);
                         }
 
