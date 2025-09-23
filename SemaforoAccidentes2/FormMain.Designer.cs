@@ -107,7 +107,7 @@
             btnRegistrar.AutoSize = true;
             btnRegistrar.BackColor = SystemColors.ControlDarkDark;
             btnRegistrar.ForeColor = SystemColors.ButtonFace;
-            btnRegistrar.Location = new Point(14, 385);
+            btnRegistrar.Location = new Point(22, 383);
             btnRegistrar.Margin = new Padding(3, 4, 3, 4);
             btnRegistrar.Name = "btnRegistrar";
             btnRegistrar.Size = new Size(94, 38);
@@ -192,7 +192,6 @@
             Controls.Add(luzRoja);
             Controls.Add(pnlSemaforo);
             FormBorderStyle = FormBorderStyle.None;
-            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(3, 4, 3, 4);
             Name = "FormMain";
             StartPosition = FormStartPosition.Manual;

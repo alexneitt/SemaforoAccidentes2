@@ -9,13 +9,13 @@ namespace SemaforoAccidentes2
 {
     public partial class FormRegistro : Form
     {
-        private string connectionString = @"Server=tcp:192.168.10.42\SQLEXPRESS,1433;Database=DBAccidentes;User Id=appuser;Password=appuser123; TrustServerCertificate=True;";
+        private string connectionString = @"Server=tcp:192.168.10.10\SQLEXPRESS,1433;Database=DBAccidentes;User Id=appuser;Password=appuser123; TrustServerCertificate=True;";
 
         public FormRegistro()
         {
             InitializeComponent();
             btnGuardar.Click += BtnGuardar_Click;
-            btnExportar.Click += btnExportar_Click; 
+            btnExportar.Click += btnExportar_Click;
             lblHsm.Enabled = false; // Deshabilitar etiqueta HSM
             txthsm.Enabled = false; // Deshabilitar campo de texto HSM
 

@@ -5,16 +5,17 @@ using System.Runtime.InteropServices;
 using System.Drawing.Drawing2D; // para GraphicsPath
 using Microsoft.Data.SqlClient;
 using System.Data.SqlClient;
-
-
-
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace SemaforoAccidentes2
 {
+
     public partial class FormMain : Form
     {
 
-        private string connectionString = @"Server=tcp:192.168.10.42\SQLEXPRESS,1433;Database=DBAccidentes;User Id=appuser;Password=appuser123; TrustServerCertificate=True;";
+        private string connectionString = @"Server=tcp:192.168.10.10\SQLEXPRESS,1433;Database=DBAccidentes;User Id=appuser;Password=appuser123; TrustServerCertificate=True;";
 
         private int diasSinAccidentes;
         private int diasSinIncidentes = 0; // Ejemplo inicial
@@ -24,6 +25,8 @@ namespace SemaforoAccidentes2
         private int hsm = 0; // Ejemplo inicial
         // Reemplaza System.Timers.Timer por System.Windows.Forms.Timer para usar el evento Tick correctamente
         private System.Windows.Forms.Timer timer;
+        private HealthCheckServer healthCheckServer;
+
 
         // Constantes para mensajes de Windows
         public const int WM_NCLBUTTONDOWN = 0xA1;
@@ -44,53 +47,19 @@ namespace SemaforoAccidentes2
             this.MouseDown += FormMain_MouseDown;
             this.LocationChanged += FormMain_LocationChanged;
 
-            // Timer para refrescar cada minuto 
+            // Timer para refrescar cada segundo
             timer = new System.Windows.Forms.Timer();
             timer.Interval = 1000;
             timer.Tick += (s, e) => ActualizarDatos();
             timer.Start();
-
-            // Timer para verificar reinicio forzoso
-            System.Windows.Forms.Timer reinicioTimer = new System.Windows.Forms.Timer();
-            reinicioTimer.Interval = 60000; // cada 60 segundos
-            reinicioTimer.Tick += ReinicioTimer_Tick;
-            reinicioTimer.Start();
-
         }
-
-
-        private void ReinicioTimer_Tick(object sender, EventArgs e)
-        {
-            // Comparar solo horas y minutos
-            if (DateTime.Now.Hour == horaReinicio.Hours &&
-                DateTime.Now.Minute == horaReinicio.Minutes)
-            {
-                ReiniciarAplicacion();
-            }
-        }
-
-        private void ReiniciarAplicacion()
-        {
-            try
-            {
-                string exePath = Application.ExecutablePath;
-
-                // Lanzar nueva instancia
-                System.Diagnostics.Process.Start(exePath);
-
-                // Cerrar instancia actual
-                Application.Exit();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al reiniciar: " + ex.Message);
-            }
-        }
-
 
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Detener servidor de health check
+            healthCheckServer?.Stop();
+
             // Evita el cierre por el botón X o Alt+F4
             if (e.CloseReason == CloseReason.UserClosing)
             {
@@ -299,6 +268,10 @@ namespace SemaforoAccidentes2
             }
 
             SuscribirseNotificaciones();
+
+            // Iniciar servidor de health check
+            healthCheckServer = new HealthCheckServer();
+            healthCheckServer.Start(5050); // Puerto 5050 para health checks
 
         }
 
@@ -510,4 +483,72 @@ namespace SemaforoAccidentes2
 
         }
     }
+
+    public class HealthCheckServer
+    {
+        private TcpListener _listener;
+        private Thread _serverThread;
+        private bool _isRunning;
+
+        public void Start(int port = 5050)
+        {
+            _isRunning = true;
+            _listener = new TcpListener(IPAddress.Any, port);
+            _serverThread = new Thread(ListenForConnections);
+            _serverThread.IsBackground = true;
+            _serverThread.Start();
+        }
+
+        private void ListenForConnections()
+        {
+            try
+            {
+                _listener.Start();
+
+                while (_isRunning)
+                {
+                    if (_listener.Pending())
+                    {
+                        TcpClient client = _listener.AcceptTcpClient();
+                        Thread clientThread = new Thread(HandleClient);
+                        clientThread.IsBackground = true;
+                        clientThread.Start(client);
+                    }
+                    Thread.Sleep(100);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silenciar errores para que no afecte la aplicación principal
+            }
+        }
+
+        private void HandleClient(object obj)
+        {
+            TcpClient client = (TcpClient)obj;
+
+            try
+            {
+                NetworkStream stream = client.GetStream();
+                byte[] response = System.Text.Encoding.UTF8.GetBytes($"OK|{Environment.MachineName}|{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                stream.Write(response, 0, response.Length);
+                stream.Flush();
+            }
+            catch
+            {
+                // Silenciar errores
+            }
+            finally
+            {
+                client.Close();
+            }
+        }
+
+        public void Stop()
+        {
+            _isRunning = false;
+            _listener?.Stop();
+        }
+    }
+
 }
