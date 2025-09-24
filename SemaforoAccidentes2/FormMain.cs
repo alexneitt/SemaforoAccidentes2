@@ -36,6 +36,7 @@ namespace SemaforoAccidentes2
         [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
+        private bool mostroErrorServidor = false;
 
         public FormMain()
         {
@@ -193,34 +194,49 @@ namespace SemaforoAccidentes2
         {
             DateTime fechaUltimoAccidente = DateTime.MinValue;
 
-            string query = "SELECT TOP 1 fecha FROM Registros WHERE tipo = 'Accidente' ORDER BY fecha DESC";
-
             try
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
-                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     conn.Open();
-                    var result = cmd.ExecuteScalar();
-                    if (result != null && result != DBNull.Value)
+
+                    string query = "SELECT TOP 1 fecha FROM Registros WHERE tipo = 'Accidente' ORDER BY fecha DESC";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        fechaUltimoAccidente = Convert.ToDateTime(result);
-                    }
-                    else
-                    {
-                        // No hay accidentes registrados
-                        fechaUltimoAccidente = DateTime.Now; // O alguna otra fecha default
+                        if (reader.Read())
+                        {
+                            fechaUltimoAccidente = reader.GetDateTime(0);
+                        }
                     }
                 }
+
+                // Si logra conectarse, resetear el flag
+                mostroErrorServidor = false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al obtener último accidente: " + ex.Message);
-                fechaUltimoAccidente = DateTime.Now; // fallback
+                if (!mostroErrorServidor)
+                {
+                    MessageBox.Show(
+                        "No se puede conectar al servidor de base de datos.\n\n" +
+                        "Verifique que SQL Server esté en ejecución y accesible.\n\n" +
+                        $"Detalle: {ex.Message}",
+                        "Error de conexión",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    mostroErrorServidor = true; // solo muestra 1 vez
+                }
+
+                // Opcional: escribir en log de depuración
+                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now}] Error SQL: {ex.Message}");
             }
 
             return fechaUltimoAccidente;
         }
+
 
 
         private DateTime ObtenerUltimoIncidente()
