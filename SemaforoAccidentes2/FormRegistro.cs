@@ -9,7 +9,12 @@ namespace SemaforoAccidentes2
 {
     public partial class FormRegistro : Form
     {
-        private string connectionString = @"Server=tcp:192.168.10.10\SQLEXPRESS,1433;Database=DBAccidentes;User Id=appuser;Password=appuser123; TrustServerCertificate=True;";
+        private string connectionString =
+            @"Server=WIN-0CBQ8A7ROUG\DBACCIDENTES,1433;
+            Database=DBAccidentes;
+            User Id=AAdmin;
+            Password=AAdmin12;
+            TrustServerCertificate=True;";
 
         public FormRegistro()
         {

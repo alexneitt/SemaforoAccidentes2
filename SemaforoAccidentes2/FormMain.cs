@@ -15,7 +15,12 @@ namespace SemaforoAccidentes2
     public partial class FormMain : Form
     {
 
-        private string connectionString = @"Server=tcp:192.168.10.10\SQLEXPRESS,1433;Database=DBAccidentes;User Id=appuser;Password=appuser123; TrustServerCertificate=True;";
+        private string connectionString =
+            @"Server=WIN-0CBQ8A7ROUG\DBACCIDENTES,1433;
+            Database=DBAccidentes;
+            User Id=AAdmin;
+            Password=AAdmin12;
+            TrustServerCertificate=True;";
 
         private int diasSinAccidentes;
         private int diasSinIncidentes = 0; // Ejemplo inicial
@@ -26,6 +31,9 @@ namespace SemaforoAccidentes2
         // Reemplaza System.Timers.Timer por System.Windows.Forms.Timer para usar el evento Tick correctamente
         private System.Windows.Forms.Timer timer;
         private HealthCheckServer healthCheckServer;
+
+        private System.Windows.Forms.Timer hostTimer; // timer
+
 
 
         // Constantes para mensajes de Windows
@@ -52,7 +60,7 @@ namespace SemaforoAccidentes2
             timer = new System.Windows.Forms.Timer();
             timer.Interval = 1000;
             timer.Tick += (s, e) => ActualizarDatos();
-            timer.Start();         
+            timer.Start();
 
         }
 
@@ -150,6 +158,10 @@ namespace SemaforoAccidentes2
             }
 
             base.OnFormClosing(e);
+
+            hostTimer?.Stop();
+            hostTimer?.Dispose();
+
         }
 
 
@@ -236,7 +248,6 @@ namespace SemaforoAccidentes2
 
             return fechaUltimoAccidente;
         }
-
 
 
         private DateTime ObtenerUltimoIncidente()
@@ -370,6 +381,21 @@ namespace SemaforoAccidentes2
             allIps = GetAllIPv4();
             // Guardar/actualizar en base de datos (opcional)
             Task.Run(() => SaveHostInfoToDatabase(machineName, primaryIp)); // en background para no bloquear UI
+
+            // Timer para actualizar info del host cada minuto
+            hostTimer = new System.Windows.Forms.Timer();
+            hostTimer.Interval = 60000; // 60,000 ms = 1 minuto
+            hostTimer.Tick += (s, e) =>
+            {
+                // Actualizar IPs y guardar info en DB
+                machineName = Environment.MachineName;
+                primaryIp = GetPrimaryIPv4();
+                allIps = GetAllIPv4();
+
+                Task.Run(() => SaveHostInfoToDatabase(machineName, primaryIp));
+            };
+            hostTimer.Start();
+
 
             SuscribirseNotificaciones();
 
