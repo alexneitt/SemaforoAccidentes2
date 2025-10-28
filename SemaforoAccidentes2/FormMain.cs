@@ -224,26 +224,12 @@ namespace SemaforoAccidentes2
                 }
 
                 // Si logra conectarse, resetear el flag
-                mostroErrorServidor = false;
+                mostroErrorServidor = false; // si logra conectarse
             }
-            catch (Exception ex)
+            catch
             {
-                if (!mostroErrorServidor)
-                {
-                    MessageBox.Show(
-                        "No se puede conectar al servidor de base de datos.\n\n" +
-                        "Verifique que SQL Server esté en ejecución y accesible.\n\n" +
-                        $"Detalle: {ex.Message}",
-                        "Error de conexión",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
-
-                    mostroErrorServidor = true; // solo muestra 1 vez
-                }
-
-                // Opcional: escribir en log de depuración
-                System.Diagnostics.Debug.WriteLine($"[{DateTime.Now}] Error SQL: {ex.Message}");
+                // No mostrar ningún mensaje ni hacer nada
+                // Solo mantener el valor por defecto
             }
 
             return fechaUltimoAccidente;
@@ -272,11 +258,11 @@ namespace SemaforoAccidentes2
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show("Error al obtener último incidente: " + ex.Message);
-                fechaUltimoIncidente = DateTime.Now; // fallback
+                // No hacer nada
             }
+
             return fechaUltimoIncidente;
         }
 
@@ -309,9 +295,9 @@ namespace SemaforoAccidentes2
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show("Error al obtener el record sin accidentes: " + ex.Message);
+                // No mostrar error
             }
 
             return record;
@@ -323,21 +309,23 @@ namespace SemaforoAccidentes2
             int hsm = 0;
             string query = "SELECT TOP 1 HSM FROM TableHSM ORDER BY id DESC";
 
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            try
             {
-                conn.Open();
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
+                    conn.Open();
                     object result = cmd.ExecuteScalar();
-                    if (result != DBNull.Value && result != null)
-                    {
+                    if (result != null && result != DBNull.Value)
                         hsm = Convert.ToInt32(result);
-                    }
                 }
+            }
+            catch
+            {
+                // No mostrar errores
             }
 
             return hsm;
-
         }
 
 
@@ -649,7 +637,7 @@ namespace SemaforoAccidentes2
             }
             catch (Exception ex)
             {
-                // Silenciar errores para que no afecte la aplicación principal
+                //MessageBox.Show("Error al obtener datos: " + ex.Message);
             }
         }
 
